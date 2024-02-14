@@ -1,0 +1,96 @@
+\documentclass[a4paper,uplatex]{jsarticle}
+
+
+% 数式
+\usepackage{amsmath,amsfonts}
+\usepackage{bm}
+% 画像
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{tikz}
+\usepackage{gnuplot-lua-tikz}
+% フォント
+\usepackage[deluxe]{otf}
+
+\usepackage{booktabs}
+
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+
+\begin{document}
+
+\title{PRML Chapter 1}
+\author{}
+\date{}
+\maketitle
+
+\section{例：多項式曲線フィッティング}
+実数値の入力変数\(x\)を観測し、それを用いて実数値の目標変数\(t\)を予測する回帰問題を考える。ただし、ここでは関数\(\sin(2\pi x)\)にガウス分布に従う
+ランダムノイズを加えて生成した人工データを用いる。
+
+訓練集合として、\(N\)個の観測地\(x\)を並べた\(\bm{x} \equiv (x_1,\cdots,x_N)^T\)と、それぞれに対応する観測値\(t\)を並べた\(\bm{t} \equiv (t_1,\cdots,t_N)^T\)が与えられたとする。
+図\ref{fig:toy data}は、\(N=10\)の場合の人工データの例である。
+
+我々の目標は、この訓練集合を利用して、新たな入力変数\(\hat{x}\)に対して目標変数\(\hat{t}\)の値を予測することである。
+
+\begin{figure}[htbp]
+  \centering
+  \input{fig/toy_data.tex}
+  \caption{\(N=10\)個の訓練データの例}
+  \label{fig:toy data}
+\end{figure}
+
+ここでは、以下のような多項式を用いてデータへのフィッティングを行うことにする。
+\begin{equation}
+  y(x,\bm{w}) = w_0 + w_1 x + w_2 x^2 + \cdots + w_M x^M = \sum_{j=0}^{M} w_j x^j
+\end{equation}
+ただし、\(M\)は多項式の\textbf{次数(order)}で、\(x^j\)は\(x\)の\(j\)乗を表す。多項式の係数\(w_0,\cdots,w_M\)をまとめて\(\bm{w}\)と書くことにする。
+多項式\(y(x,\bm{w})\)は、\(x\)の非線形関数であるが、係数\(\bm{w}\)の線形関数であることに注意する。このような、未知パラメータに対して線形な関数は\textbf{線形モデル}と呼ばれる。
+
+訓練データに多項式をあてはめることで係数の値を求める。これは、\(\bm{w}\)を任意に固定したときの関数\(y(x,\bm{w})\)と
+訓練集合のデータ点との間のずれを測る\textbf{誤差関数(error function)}の最小化で達成できる。ここでは、誤差関数として単純で広く用いられている\textbf{二乗和誤差(sum-of-squares error)}を用いる。
+式で書けば、
+\begin{equation}
+  E(\bm{w}) = \frac{1}{2} \sum_{n=1}^{N} \{y(x_n,\bm{w}) - t_n\}^2
+\end{equation}
+となる。ただし、後で便利なように係数\(1/2\)をかけている。
+
+このように、\(E(\bm{w})\)をできるだけ小さくするような\(\bm{w}\)を選ぶことで曲線当てはめ問題を解くことができる。では、誤差関数を最小にする解\(\bm{w^*}=\{w_i\}\)を求める。
+誤差関数を最小にする解をもとめるには、\(E(\bm{w})\)を\(w_i\)について微分し、その微分がゼロになるような\(w_i\)を求めればよい。
+つまり、
+\begin{equation}
+  \frac{\delta E}{\delta w_i} = 0
+\end{equation}
+を求める。
+はじめに、\(E(\bm{w})\)を\(w_i\)について微分する。
+\begin{align*}
+  \frac{\delta E}{\delta w_i} &= \frac{1}{2}\sum_{n=1}^{N}\left\{2\left(\sum_{j=0}^{M}w_j x_n^j-t_n\right)-x_n^i\right\} \\
+                              &= \sum_{n=1}^{N}\left(x_n^i\sum_{j=0}^{M}w_j x_n^j\right) - \sum_{n=1}^{N}t_n x_n^i \\
+\end{align*}
+ここで、\(\frac{\delta E}{\delta w_i} = 0\)を求めるので、
+\begin{equation}
+  \sum_{n=1}^{N}\left(x_n^i\sum_{j=0}^{M}w_j x_n^j\right) = \sum_{n=1}^{N}t_n x_n^i
+\end{equation}
+
+左辺を変形すると、
+\begin{align*}
+  (左辺) &= \sum_{n=1}^{N}\left\{x_n^i\left(w_0 x_n^0+w_1x_n^1+\cdots+w_Mx_n^M\right)\right\} \\
+         &= \sum_{n=1}^{N}\left\{w_0x_n^{i+0}+w_1x_n^{i+1}+\cdots+w_Mx_n^{i+M}\right\} \\
+         &= \sum_{n=1}^{N}\sum_{j=0}^{M}\left(w_jx_n^{i+j}\right) \\
+         &= \sum_{j=0}^{M}\left\{\sum_{n=1}^{N}(x_n)^{i+j}\right\}w_j \\
+\end{align*}
+また、
+\begin{equation}
+  A_{ij} = \sum_{n=1}^{N}(x_n)^{i+j}, T_i = \sum_{n=1}^{N}t_n(x_n)^i
+\end{equation}
+とおくと、
+\begin{equation}
+  \sum_{j=0}^{M}A_{ij}w_j = T_i
+\end{equation}
+となる。これは線形方程式であり、これを解くことで、誤差関数を最小にする解\(\bm{w^*}\)を求めることができる。
+
+\begin{figure}[htbp]
+  \centering
+  \input{fig/poly_fit.tex}
+\end{figure}
+\end{document}
