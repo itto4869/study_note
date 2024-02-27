@@ -1,7 +1,6 @@
 reset
 set terminal tikz
 set output "prml/ch1/fig/poly_fit.tex"
-set title "Polynomial Fit"
 set multiplot layout 2,2
 set xlabel "$x$"
 set ylabel "$t$"
